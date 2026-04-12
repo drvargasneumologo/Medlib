@@ -15,6 +15,49 @@ from storage.database import get_collections, create_collection
 
 st.set_page_config(page_title="Search — MedLib", page_icon="🔍", layout="wide")
 
+
+def _show_article_detail(a):
+    """Muestra el detalle completo de un artículo."""
+    from services.scoring_service import score_explanation
+    from datetime import UTC, datetime
+
+    st.markdown(f"""
+    <div style="background:#f0f7ff; border-left:4px solid #1a6ca8; padding:1rem; border-radius:6px; margin-bottom:1rem;">
+        <div style="font-size:1.05rem; font-weight:600; color:#1a4a6e;">{a.title}</div>
+        <div style="font-size:0.82rem; color:#5a7fa0; margin-top:0.4rem;">{a.authors_str[:120]}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.markdown(f"**Revista:** {a.journal or '—'}")
+    c2.markdown(f"**Año:** {a.year or '—'}")
+    c3.markdown(f"**Tipo:** {a.article_type or '—'}")
+    c4.markdown(f"**Score:** {a.quality_score or '—'}/100")
+
+    id_cols = st.columns(4)
+    if a.doi:
+        id_cols[0].markdown(f"**DOI:** [{a.doi}](https://doi.org/{a.doi})")
+    if a.pmid:
+        id_cols[1].markdown(f"**PMID:** [{a.pmid}](https://pubmed.ncbi.nlm.nih.gov/{a.pmid}/)")
+    if a.pmcid:
+        id_cols[2].markdown(f"**PMCID:** {a.pmcid}")
+    id_cols[3].markdown(f"**Acceso:** {a.access_type or '—'}")
+
+    if a.abstract:
+        with st.expander("📄 Abstract", expanded=True):
+            st.write(a.abstract)
+
+    if a.mesh_terms:
+        st.markdown(f"**MeSH:** {', '.join(a.mesh_terms[:10])}")
+    if a.keywords:
+        st.markdown(f"**Keywords:** {', '.join(a.keywords[:10])}")
+
+    if a.quality_score is not None:
+        with st.expander("📊 Explicación del Score"):
+            expl = score_explanation(a, current_year=datetime.now(UTC).year)
+            for k, v in expl.items():
+                st.markdown(f"- **{k}:** {v}")
+
 st.title("🔍 Búsqueda Avanzada")
 st.caption("Busca en PubMed, Europe PMC, Crossref y OpenAlex con un solo formulario.")
 
@@ -218,46 +261,3 @@ if submitted:
     if selected_idx is not None:
         sel = articles[selected_idx]
         _show_article_detail(sel)
-
-
-def _show_article_detail(a):
-    """Muestra el detalle completo de un artículo."""
-    from services.scoring_service import score_explanation
-    from datetime import UTC, datetime
-
-    st.markdown(f"""
-    <div style="background:#f0f7ff; border-left:4px solid #1a6ca8; padding:1rem; border-radius:6px; margin-bottom:1rem;">
-        <div style="font-size:1.05rem; font-weight:600; color:#1a4a6e;">{a.title}</div>
-        <div style="font-size:0.82rem; color:#5a7fa0; margin-top:0.4rem;">{a.authors_str[:120]}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    c1, c2, c3, c4 = st.columns(4)
-    c1.markdown(f"**Revista:** {a.journal or '—'}")
-    c2.markdown(f"**Año:** {a.year or '—'}")
-    c3.markdown(f"**Tipo:** {a.article_type or '—'}")
-    c4.markdown(f"**Score:** {a.quality_score or '—'}/100")
-
-    id_cols = st.columns(4)
-    if a.doi:
-        id_cols[0].markdown(f"**DOI:** [{a.doi}](https://doi.org/{a.doi})")
-    if a.pmid:
-        id_cols[1].markdown(f"**PMID:** [{a.pmid}](https://pubmed.ncbi.nlm.nih.gov/{a.pmid}/)")
-    if a.pmcid:
-        id_cols[2].markdown(f"**PMCID:** {a.pmcid}")
-    id_cols[3].markdown(f"**Acceso:** {a.access_type or '—'}")
-
-    if a.abstract:
-        with st.expander("📄 Abstract", expanded=True):
-            st.write(a.abstract)
-
-    if a.mesh_terms:
-        st.markdown(f"**MeSH:** {', '.join(a.mesh_terms[:10])}")
-    if a.keywords:
-        st.markdown(f"**Keywords:** {', '.join(a.keywords[:10])}")
-
-    if a.quality_score is not None:
-        with st.expander("📊 Explicación del Score"):
-            expl = score_explanation(a, current_year=datetime.now(UTC).year)
-            for k, v in expl.items():
-                st.markdown(f"- **{k}:** {v}")
