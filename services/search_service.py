@@ -227,6 +227,17 @@ def _search_source(
             open_access_only=open_access_only,
         )
 
+
+    elif source == "google_scholar":
+        import os
+        from connectors.scholarly_connector import search_google_scholar
+        max_scholar = min(max_results, int(os.getenv("SCHOLAR_MAX_RESULTS", "10")))
+        return search_google_scholar(
+            query=query,
+            max_results=max_scholar,
+            year_from=year_from,
+            year_to=year_to,
+        )
     else:
         raise ValueError(f"Fuente no reconocida: {source}")
 

@@ -1,62 +1,51 @@
 """
 Página 5: Exportaciones.
-CSV, JSON, RIS, BibTeX y paquete NotebookLM.
+CSV, JSON, RIS, BibTeX y paquete NotebookLM mejorado.
 """
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import streamlit as st
-from datetime import UTC, datetime
+from datetime import datetime, UTC
 
 from storage.database import get_all_articles, get_collections
-from exporters.exporters import (
-    to_csv_bytes, to_json_bytes, to_ris_bytes,
-    to_bibtex_bytes, generate_notebooklm_zip
-)
+from exporters.exporters import to_csv_bytes, to_json_bytes, to_ris_bytes, to_bibtex_bytes
+from exporters.notebooklm_exporter import generate_notebooklm_package
 
 st.set_page_config(page_title="Exports — MedLib", page_icon="📤", layout="wide")
 
-# Garantizar BD inicializada al acceder directamente a la pagina
+# Garantizar BD inicializada
 init_db()
 
 st.title("📤 Exportaciones")
-st.caption("Exporta tu biblioteca en múltiples formatos.")
 
-# ─── Filtros de exportación ───────────────────────────────────────────────────
+# ─── Filtros ──────────────────────────────────────────────────────────────────
 st.subheader("1. Seleccionar subconjunto")
 
 with st.form("export_filters"):
-    col1, col2, col3 = st.columns(3)
-
+    c1, c2, c3 = st.columns(3)
     collections = [""] + get_collections()
-    collection_filter = col1.selectbox(
-        "Colección",
-        collections,
-        format_func=lambda x: "Todas las colecciones" if x == "" else x
-    )
-    status_filter = col2.selectbox(
-        "Estado de lectura",
-        ["", "pending", "reading", "read", "priority", "included"],
-        format_func=lambda x: "Todos" if x == "" else x
-    )
-    min_score = col3.slider("Score mínimo", 0, 100, 0, step=5)
-
+    col_filter    = c1.selectbox("Colección", collections,
+                                  format_func=lambda x: "Todas" if x == "" else x)
+    status_filter = c2.selectbox("Estado", ["", "pending", "reading", "read", "priority", "included"],
+                                  format_func=lambda x: "Todos" if x == "" else x)
+    min_score = c3.slider("Score mínimo", 0, 100, 0, step=5)
     submitted = st.form_submit_button("🔄 Cargar artículos", type="primary")
 
-# Cargar artículos (inicialmente o tras aplicar filtros)
 if "export_articles" not in st.session_state or submitted:
-    articles = get_all_articles(
-        collection=collection_filter or None,
+    arts = get_all_articles(
+        collection=col_filter or None,
         read_status=status_filter or None,
         min_score=min_score if min_score > 0 else None,
         limit=5000,
     )
-    st.session_state["export_articles"] = articles
-    st.session_state["export_collection_name"] = collection_filter or "medlib_export"
+    st.session_state["export_articles"] = arts
+    st.session_state["export_col_name"] = col_filter or "medlib_export"
 
-articles = st.session_state.get("export_articles", [])
-collection_name = st.session_state.get("export_collection_name", "medlib_export")
+articles    = st.session_state.get("export_articles", [])
+col_name    = st.session_state.get("export_col_name", "medlib_export")
+timestamp   = datetime.now(UTC).strftime("%Y%m%d_%H%M")
 
 if not articles:
     st.warning("No hay artículos que exportar con los filtros actuales.")
@@ -64,147 +53,154 @@ if not articles:
 
 st.success(f"**{len(articles)} artículos** listos para exportar.")
 
-timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M")
-
 # ─── Formatos estándar ────────────────────────────────────────────────────────
 st.subheader("2. Formatos estándar")
-col1, col2, col3, col4 = st.columns(4)
 
-with col1:
-    st.markdown("#### CSV")
-    st.caption("Compatible con Excel, Google Sheets y cualquier gestor de datos.")
+c1, c2, c3, c4 = st.columns(4)
+with c1:
+    st.markdown("#### 📊 CSV")
+    st.caption("Excel, Google Sheets, pandas")
     try:
-        csv_bytes = to_csv_bytes(articles)
-        st.download_button(
-            "⬇️ Descargar CSV",
-            data=csv_bytes,
-            file_name=f"medlib_{timestamp}.csv",
-            mime="text/csv",
-            use_container_width=True,
-        )
+        st.download_button("⬇️ Descargar CSV", to_csv_bytes(articles),
+                           f"medlib_{timestamp}.csv", "text/csv",
+                           use_container_width=True)
     except Exception as e:
         st.error(f"Error: {e}")
 
-with col2:
-    st.markdown("#### JSON")
-    st.caption("Metadatos completos en formato estructurado.")
+with c2:
+    st.markdown("#### 🗂️ JSON")
+    st.caption("Metadatos completos estructurados")
     try:
-        json_bytes = to_json_bytes(articles)
-        st.download_button(
-            "⬇️ Descargar JSON",
-            data=json_bytes,
-            file_name=f"medlib_{timestamp}.json",
-            mime="application/json",
-            use_container_width=True,
-        )
+        st.download_button("⬇️ Descargar JSON", to_json_bytes(articles),
+                           f"medlib_{timestamp}.json", "application/json",
+                           use_container_width=True)
     except Exception as e:
         st.error(f"Error: {e}")
 
-with col3:
-    st.markdown("#### RIS")
-    st.caption("Compatible con Zotero, Mendeley, EndNote y gestores bibliográficos.")
+with c3:
+    st.markdown("#### 📚 RIS")
+    st.caption("Zotero, Mendeley, EndNote")
     try:
-        ris_bytes = to_ris_bytes(articles)
-        st.download_button(
-            "⬇️ Descargar RIS",
-            data=ris_bytes,
-            file_name=f"medlib_{timestamp}.ris",
-            mime="application/x-research-info-systems",
-            use_container_width=True,
-        )
+        st.download_button("⬇️ Descargar RIS", to_ris_bytes(articles),
+                           f"medlib_{timestamp}.ris",
+                           "application/x-research-info-systems",
+                           use_container_width=True)
     except Exception as e:
         st.error(f"Error: {e}")
 
-with col4:
-    st.markdown("#### BibTeX")
-    st.caption("Para LaTeX, Overleaf y sistemas de citación académica.")
+with c4:
+    st.markdown("#### 📝 BibTeX")
+    st.caption("LaTeX, Overleaf")
     try:
-        bib_bytes = to_bibtex_bytes(articles)
-        st.download_button(
-            "⬇️ Descargar BibTeX",
-            data=bib_bytes,
-            file_name=f"medlib_{timestamp}.bib",
-            mime="text/plain",
-            use_container_width=True,
-        )
+        st.download_button("⬇️ Descargar BibTeX", to_bibtex_bytes(articles),
+                           f"medlib_{timestamp}.bib", "text/plain",
+                           use_container_width=True)
     except Exception as e:
         st.error(f"Error: {e}")
 
 st.markdown("---")
 
-# ─── Exportación NotebookLM ───────────────────────────────────────────────────
-st.subheader("3. Paquete NotebookLM")
+# ─── NotebookLM mejorado ──────────────────────────────────────────────────────
+st.subheader("3. Paquete NotebookLM Optimizado")
 
-st.markdown("""
-El paquete NotebookLM genera un archivo **ZIP** con:
-- 📄 `README.md` — Descripción de la colección
-- 📊 `resumen_master.csv` — Tabla completa de artículos
-- 🗂️ `metadata.json` — Metadatos estructurados
-- 📝 `fichas/` — Ficha individual en Markdown por artículo
-
-**Uso:** Sube los archivos `.md` y el CSV directamente a NotebookLM como fuentes.
-""")
-
-col_nb1, col_nb2 = st.columns([2, 1])
+col_nb1, col_nb2 = st.columns([2, 2])
 with col_nb1:
-    nb_collection_name = st.text_input(
-        "Nombre de la colección para el ZIP",
-        value=collection_name.replace(" ", "_") or "mi_coleccion",
+    nb_name = st.text_input(
+        "Nombre de la colección para el paquete",
+        value=col_name.replace(" ", "_") or "coleccion_neumologia",
     )
+    include_stats = st.checkbox("Incluir estadísticas de colección", value=True)
 
 with col_nb2:
-    st.markdown(" ")  # spacer
-    st.markdown(" ")
+    st.markdown("**Contenido del paquete:**")
+    st.markdown("""
+    - 📋 `README.md` — Instrucciones y preguntas sugeridas para NotebookLM
+    - 📊 `00_INDICE_GENERAL.md` — Tabla navegable de todos los artículos
+    - 📈 `resumen_master.csv` — Datos tabulares
+    - 🗂️ `metadata.json` — Metadatos completos
+    - 🩺 `fichas/` — Ficha clínica PICO por artículo
+    - 📁 `por_tipo/` — Agrupados por meta-análisis, ECA, guías…
+    - 📉 `estadisticas/` — Resumen estadístico de la colección
+    """)
 
-st.info(f"Se generarán **{len(articles)} fichas** en Markdown + archivos master.")
+# Estadísticas rápidas de la colección
+with_ficha = sum(1 for a in articles if a.main_finding)
+with_oa    = sum(1 for a in articles if a.open_access_status == "open")
+with_pdf   = sum(1 for a in articles if a.local_pdf_path)
 
-# Advertencia si hay muchos artículos
-if len(articles) > 200:
-    st.warning(
-        f"⚠️ {len(articles)} artículos es un número elevado. "
-        "La generación del ZIP puede tardar unos segundos. "
-        "Considera filtrar a un subconjunto más específico para NotebookLM."
+col_s1, col_s2, col_s3, col_s4 = st.columns(4)
+col_s1.metric("Artículos", len(articles))
+col_s2.metric("Con ficha clínica", with_ficha)
+col_s3.metric("Acceso abierto", with_oa)
+col_s4.metric("PDFs locales", with_pdf)
+
+if with_ficha < len(articles):
+    st.info(
+        f"ℹ️ {len(articles) - with_ficha} artículos aún no tienen ficha clínica completa. "
+        "Puedes completarlas desde **Library → Ficha Clínica** y luego regenerar el paquete."
     )
 
-if st.button("📦 Generar paquete NotebookLM", type="primary"):
+if len(articles) > 300:
+    st.warning(
+        f"⚠️ {len(articles)} artículos generará un ZIP grande. "
+        "Considera filtrar a un subconjunto más específico."
+    )
+
+if st.button("📦 Generar paquete NotebookLM Completo", type="primary"):
     with st.spinner("Generando paquete…"):
         try:
-            zip_bytes = generate_notebooklm_zip(articles, nb_collection_name)
+            zip_bytes = generate_notebooklm_package(
+                articles,
+                collection_name=nb_name,
+                include_stats=include_stats,
+            )
             st.download_button(
                 "⬇️ Descargar ZIP para NotebookLM",
                 data=zip_bytes,
-                file_name=f"notebooklm_{nb_collection_name}_{timestamp}.zip",
+                file_name=f"notebooklm_{nb_name}_{timestamp}.zip",
                 mime="application/zip",
                 use_container_width=True,
             )
             st.success(
-                f"✅ Paquete generado con {len(articles)} fichas. "
-                "Descárgalo y sube los archivos a NotebookLM."
+                f"✅ Paquete generado: {len(articles)} fichas + índice + estadísticas."
             )
+            with st.expander("💡 Cómo usar en NotebookLM"):
+                st.markdown("""
+                1. Descomprime el ZIP
+                2. Abre [notebooklm.google.com](https://notebooklm.google.com)
+                3. Crea un nuevo Notebook
+                4. Sube **primero** `00_INDICE_GENERAL.md`
+                5. Sube `resumen_master.csv`
+                6. Sube las fichas de `fichas/` más relevantes
+                7. Opcional: sube archivos de `por_tipo/`
+
+                **Preguntas de ejemplo:**
+                - *"¿Cuáles son los hallazgos más importantes de los meta-análisis?"*
+                - *"Resume la evidencia sobre [tratamiento] según los ensayos clínicos"*
+                - *"¿Qué limitaciones tienen los estudios disponibles?"*
+                - *"¿Cuál es la recomendación de las guías clínicas sobre [tema]?"*
+                """)
         except Exception as e:
-            st.error(f"Error generando el paquete: {e}")
+            st.error(f"Error generando paquete: {e}")
 
 st.markdown("---")
 
 # ─── Vista previa ─────────────────────────────────────────────────────────────
-st.subheader("Vista previa de artículos a exportar")
+st.subheader("Vista previa")
 import pandas as pd
-
 rows = []
 for a in articles[:100]:
     rows.append({
-        "Score": f"{a.quality_score:.0f}" if a.quality_score else "—",
-        "Título": a.title[:80],
-        "Autores": (a.authors[0] if a.authors else "—"),
-        "Revista": (a.journal or "—")[:30],
-        "Año": a.year or "—",
-        "DOI": "✓" if a.doi else "—",
-        "Estado": a.read_status,
-        "Colección": a.collection_name,
+        "Score":    f"{a.quality_score:.0f}" if a.quality_score else "—",
+        "Título":   a.title[:80],
+        "Autores":  a.authors[0] if a.authors else "—",
+        "Revista":  (a.journal or "—")[:30],
+        "Año":      a.year or "—",
+        "OA":       "🔓" if a.open_access_status == "open" else "—",
+        "Ficha":    "✓" if a.main_finding else "—",
+        "Estado":   a.read_status,
+        "Colección":a.collection_name,
     })
-
-df = pd.DataFrame(rows)
-st.dataframe(df, use_container_width=True, hide_index=True, height=300)
-
+st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True, height=300)
 if len(articles) > 100:
     st.caption(f"Mostrando primeros 100 de {len(articles)} artículos.")
