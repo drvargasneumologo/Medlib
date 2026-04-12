@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import streamlit as st
 from datetime import datetime, UTC
 
-from storage.database import get_all_articles, get_collections
+from storage.database import get_all_articles, get_collections, init_db
 from exporters.exporters import to_csv_bytes, to_json_bytes, to_ris_bytes, to_bibtex_bytes
 from exporters.notebooklm_exporter import generate_notebooklm_package
 

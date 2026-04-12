@@ -10,7 +10,7 @@ import streamlit as st
 import pandas as pd
 from datetime import UTC, datetime
 
-from storage.database import get_stats
+from storage.database import get_stats, init_db
 
 st.set_page_config(page_title="Dashboard — MedLib", page_icon="📊", layout="wide")
 

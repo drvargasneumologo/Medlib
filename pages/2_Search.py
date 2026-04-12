@@ -11,7 +11,7 @@ import pandas as pd
 from datetime import UTC, datetime
 
 from services.search_service import run_search
-from storage.database import get_collections, create_collection
+from storage.database import get_collections, create_collection, init_db
 
 st.set_page_config(page_title="Search — MedLib", page_icon="🔍", layout="wide")
 
