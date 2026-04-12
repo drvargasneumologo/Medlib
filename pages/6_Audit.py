@@ -1,5 +1,5 @@
 """
-P�gina 6: Auditoría de la biblioteca.
+Página 6: Auditoría de la biblioteca.
 Detecta problemas de calidad, metadatos incompletos y duplicados.
 """
 import sys
@@ -149,9 +149,9 @@ with col_a2:
 st.markdown("---")
 st.subheader("Log de actividad")
 try:
-    with open("data/medlib.log", "r", encoding="utf-8") as f:
+    with open("data/medlib.log", "r", encoding="utf-8", errors="replace") as f:
         log_lines = f.readlines()
     last_lines = log_lines[-50:]
     st.code("".join(last_lines), language="text")
-except FileNotFoundError:
+except (FileNotFoundError, OSError):
     st.info("No hay log disponible todavía.")
