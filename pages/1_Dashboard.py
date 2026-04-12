@@ -14,6 +14,9 @@ from storage.database import get_stats
 
 st.set_page_config(page_title="Dashboard — MedLib", page_icon="📊", layout="wide")
 
+# Garantizar BD inicializada al acceder directamente a la pagina
+init_db()
+
 st.title("📊 Dashboard")
 st.caption(f"Actualizado: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}")
 

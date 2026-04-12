@@ -17,6 +17,9 @@ from exporters.exporters import (
 
 st.set_page_config(page_title="Exports — MedLib", page_icon="📤", layout="wide")
 
+# Garantizar BD inicializada al acceder directamente a la pagina
+init_db()
+
 st.title("📤 Exportaciones")
 st.caption("Exporta tu biblioteca en múltiples formatos.")
 

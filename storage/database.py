@@ -22,7 +22,9 @@ from models.article import Article, SearchLog
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = Path("data/medlib.db")
+# Ruta absoluta basada en la ubicación del módulo, independiente del CWD
+_ROOT = Path(__file__).parent.parent
+DB_PATH = _ROOT / "data" / "medlib.db"
 
 
 def get_db_path() -> Path:

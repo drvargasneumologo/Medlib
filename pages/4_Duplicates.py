@@ -9,10 +9,14 @@ import streamlit as st
 import pandas as pd
 
 from storage.database import (
+    init_db,
     get_potential_duplicates, get_connection, update_article_fields, delete_article
 )
 
 st.set_page_config(page_title="Duplicates — MedLib", page_icon="🔀", layout="wide")
+
+# Garantizar BD inicializada al acceder directamente a la pagina
+init_db()
 
 st.title("🔀 Revisión de Duplicados")
 st.caption("Revisa grupos de artículos que el sistema detectó como potencialmente duplicados.")

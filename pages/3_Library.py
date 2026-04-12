@@ -10,11 +10,15 @@ import pandas as pd
 from datetime import UTC, datetime
 
 from storage.database import (
+    init_db,
     get_all_articles, get_collections, update_article_fields, delete_article, get_article_by_id
 )
 from services.scoring_service import score_explanation
 
 st.set_page_config(page_title="Library — MedLib", page_icon="📚", layout="wide")
+
+# Garantizar BD inicializada al acceder directamente a la pagina
+init_db()
 
 st.title("📚 Biblioteca")
 

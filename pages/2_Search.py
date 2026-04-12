@@ -15,6 +15,9 @@ from storage.database import get_collections, create_collection
 
 st.set_page_config(page_title="Search — MedLib", page_icon="🔍", layout="wide")
 
+# Garantizar BD inicializada al acceder directamente a la pagina
+init_db()
+
 
 def _show_article_detail(a):
     """Muestra el detalle completo de un artículo."""

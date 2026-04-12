@@ -5,16 +5,20 @@ import re
 import sys
 from pathlib import Path
 
+_ROOT = Path(__file__).parent.parent
+_LOG_FILE = _ROOT / "data" / "medlib.log"
+
 
 def setup_logging(level: str = "INFO"):
     """Configura logging con formato limpio."""
+    _LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(
         level=getattr(logging, level.upper(), logging.INFO),
         format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[
             logging.StreamHandler(sys.stdout),
-            logging.FileHandler("data/medlib.log", encoding="utf-8"),
+            logging.FileHandler(str(_LOG_FILE), encoding="utf-8"),
         ],
     )
 

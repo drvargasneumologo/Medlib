@@ -10,10 +10,14 @@ import streamlit as st
 import pandas as pd
 
 from storage.database import (
-    get_audit_report, get_all_articles, update_article_fields, get_connection
+    get_audit_report, get_all_articles, update_article_fields, get_connection,
+    init_db,
 )
 
 st.set_page_config(page_title="Audit — MedLib", page_icon="🔎", layout="wide")
+
+# Garantizar que la BD esté inicializada aunque se acceda directamente a esta página
+init_db()
 
 st.title("🔎 Auditoría de Calidad")
 st.caption("Detecta problemas en tu biblioteca para mantener metadatos limpios y completos.")
