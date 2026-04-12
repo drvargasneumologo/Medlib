@@ -40,8 +40,8 @@ ENV/
 *.swo
 *~
 
-# Streamlit cache
-.streamlit/
+# Streamlit — ignorar secrets pero incluir config
+.streamlit/secrets.toml
 
 # Pytest
 .pytest_cache/
