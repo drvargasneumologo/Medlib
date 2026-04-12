@@ -136,15 +136,15 @@ class Article(BaseModel):
 
     @property
     def fingerprint(self) -> str:
-        """Hash único para detección de duplicados."""
-        parts = []
+        """Hash único para detección de duplicados.
+        Prioridad: DOI > PMID > título normalizado.
+        """
         if self.doi:
-            parts.append(f"doi:{self.doi}")
-        if self.pmid:
-            parts.append(f"pmid:{self.pmid}")
-        if not parts:
-            parts.append(f"title:{self.normalized_title[:80]}")
-        key = "|".join(parts)
+            key = f"doi:{self.doi}"
+        elif self.pmid:
+            key = f"pmid:{self.pmid}"
+        else:
+            key = f"title:{self.normalized_title[:80]}"
         return hashlib.md5(key.encode()).hexdigest()
 
     @property
