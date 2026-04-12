@@ -25,7 +25,7 @@ def load_env_vars():
     """Lee el .env actual como dict."""
     env = {}
     if ENV_FILE.exists():
-        with open(ENV_FILE, "r") as f:
+        with open(ENV_FILE, "r", encoding="utf-8", errors="replace") as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
@@ -38,7 +38,7 @@ def save_env_vars(env_dict: dict):
     lines = []
     for k, v in env_dict.items():
         lines.append(f"{k}={v}")
-    with open(ENV_FILE, "w") as f:
+    with open(ENV_FILE, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
 
 current_env = load_env_vars()
