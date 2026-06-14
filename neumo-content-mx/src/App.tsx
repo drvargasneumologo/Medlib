@@ -4,6 +4,7 @@ import DashboardView from './features/dashboard/DashboardView';
 import TopicsView from './features/topics/TopicsView';
 import GeneratorView from './features/posts/GeneratorView';
 import PlaceholderView from './features/placeholder/PlaceholderView';
+import CalendarView from './features/calendar/CalendarView';
 
 export default function App() {
   return (
@@ -13,10 +14,7 @@ export default function App() {
           <Route index element={<DashboardView />} />
           <Route path="temas" element={<TopicsView />} />
           <Route path="generador" element={<GeneratorView />} />
-          <Route
-            path="calendario"
-            element={<PlaceholderView title="Calendario" description="Planificación de publicaciones" icon="📅" />}
-          />
+          <Route path="calendario" element={<CalendarView />} />
           <Route
             path="diseno"
             element={<PlaceholderView title="Diseño" description="Plantillas visuales para posts" icon="🎨" />}

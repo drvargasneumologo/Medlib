@@ -22,6 +22,8 @@ export interface Topic {
   hashtagSetId?: string;
 }
 
+export type PostStatus = 'borrador' | 'en_revision' | 'aprobado' | 'rechazado' | 'programado' | 'publicado';
+
 export interface Post {
   id: string;
   topicId: string;
@@ -29,6 +31,18 @@ export interface Post {
   caption: string;
   hashtags: string[];
   createdAt: string;
+  // Fase 3
+  imageUrl?: string;
+  imagePrompt?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  status?: PostStatus;
+  scheduledAt?: string;
+  publishedAt?: string;
+  disclaimer?: string;
+  contentType?: ContentType;
+  aiModel?: string;
+  complianceFlags?: ComplianceFlag[];
 }
 
 // Banco de hashtags validados (v2)
