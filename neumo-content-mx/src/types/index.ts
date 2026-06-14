@@ -39,3 +39,24 @@ export interface HashtagSet {
   hashtags: string[];
   notes?: string;
 }
+
+export type ContentType =
+  | 'post_imagen'
+  | 'carrusel'
+  | 'historia'
+  | 'reels'
+  | 'hilo_twitter'
+  | 'articulo_linkedin';
+
+export interface Doctor {
+  name: string;
+  cedula: string;
+  cedulaEspecialidad: string;
+  specialty: string;
+  location: string;
+}
+
+export interface ComplianceFlag {
+  severity: 'ok' | 'warning' | 'error';
+  message: string;
+}
