@@ -15,19 +15,24 @@ export interface ImageGenResult {
 export class ImageGenError extends Error {}
 
 function buildImagePrompt(params: ImageGenParams): string {
+  const base =
+    `Premium professional medical illustration for a pulmonology social media post about ${params.topic.title}. ` +
+    `Clean, sober, modern clinical aesthetic — single clear focal point with generous negative space, ` +
+    `NOT a busy collage or multiple vignettes. ` +
+    `Color palette: medical blue, white, soft gray, medical teal/green (matching a #2e80fa and #319dac brand palette). ` +
+    `No exaggerated cartoon characters, no blood, no dramatic hospital scenes, no identifiable human faces. ` +
+    `May depict calm imagery of: lung/airway anatomy, inhaler device, spirometer, pulse oximeter, ` +
+    `or a serene doctor-patient consultation (no visible faces). ` +
+    `No text, no words, no labels, no logos — text is added separately in post-production.`;
+
   const styleDesc =
     params.style === 'educativo'
-      ? 'flat vector illustration style, diagram-like'
+      ? 'Style: clean flat vector diagram, minimal line work, infographic-style anatomy illustration, like a modern medical textbook.'
       : params.style === 'ilustrativo'
-        ? 'soft watercolor illustration style'
-        : 'realistic medical photography style';
+        ? 'Style: elegant minimalist line-art or soft watercolor illustration, calming and refined.'
+        : 'Style: realistic medical photography or clean 3D render, soft studio lighting, premium healthcare brand feel.';
 
-  return (
-    `Professional medical illustration about ${params.topic.title}, ` +
-    `${styleDesc}, clean minimalist background, soft blue and teal color palette, ` +
-    `no text, no words, no labels, no logos, suitable for healthcare social media, ` +
-    `respectful and calm tone`
-  );
+  return `${base} ${styleDesc}`;
 }
 
 function isPortrait(params: ImageGenParams): boolean {
