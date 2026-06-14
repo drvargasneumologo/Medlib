@@ -39,33 +39,40 @@ export async function generatePostImage(params: ImageGenParams): Promise<ImageGe
   if (!key) throw new ImageGenError('Configura tu clave de OpenAI en .env.local para generar imágenes');
 
   const prompt = buildImagePrompt(params);
-  const size = isPortrait(params) ? '1024x1792' : '1024x1024';
+  const size = isPortrait(params) ? '1024x1536' : '1024x1024';
 
   let res: Response;
   try {
     res = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'dall-e-3', prompt, size, quality: 'standard', n: 1 }),
+      body: JSON.stringify({ model: 'gpt-image-1', prompt, size, n: 1 }),
     });
   } catch {
     throw new ImageGenError('No se pudo generar la imagen. Verifica tu conexión e intenta de nuevo.');
   }
 
   if (!res.ok) {
-    let body: { error?: { message?: string } } = {};
-    try { body = await res.json(); } catch { /* ignore */ }
-    if (res.status === 400 && body?.error?.message?.includes('content_policy')) {
+    let body: { error?: { message?: string; code?: string } } = {};
+    try { body = await res.json(); } catch { /* respuesta no es JSON válido */ }
+    const apiMsg = body?.error?.message ?? '';
+    const apiCode = body?.error?.code ?? '';
+    if (res.status === 400 && apiMsg.includes('content_policy')) {
       throw new ImageGenError('El tema generó una imagen no permitida por políticas de OpenAI. Intenta con un estilo diferente.');
     }
-    throw new ImageGenError(`No se pudo generar la imagen (código ${res.status}). Intenta de nuevo.`);
+    const parts: string[] = [`No se pudo generar la imagen (código ${res.status}).`];
+    if (apiCode) parts.push(`Código OpenAI: ${apiCode}.`);
+    if (apiMsg) parts.push(`Detalle: ${apiMsg}`);
+    throw new ImageGenError(parts.join(' '));
   }
 
-  let data: { data: { url: string }[] };
+  let data: { data: { b64_json: string }[] };
   try {
     data = await res.json();
-    return { imageUrl: data.data[0].url, prompt };
+    const base64 = data.data[0].b64_json;
+    const imageUrl = `data:image/png;base64,${base64}`;
+    return { imageUrl, prompt };
   } catch {
-    throw new ImageGenError('Respuesta inesperada de DALL-E. Intenta de nuevo.');
+    throw new ImageGenError('Respuesta inesperada de gpt-image-1. Intenta de nuevo.');
   }
 }
